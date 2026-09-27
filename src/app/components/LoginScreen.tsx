@@ -37,7 +37,7 @@ export function LoginScreen({ onLogin }: Props) {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onLogin(mode === 'signup' ? name : 'Sarah Davis', email);
+      onLogin(mode === 'signup' ? name : '', email);
     }, 900);
   }
 

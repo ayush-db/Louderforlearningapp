@@ -1,4 +1,5 @@
-import { ChevronLeft, Check, FileText, Clock, Users, DollarSign } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, Check, FileText, Clock, Users, DollarSign, ExternalLink } from 'lucide-react';
 import { grants } from './grantData';
 
 interface Props {
@@ -7,8 +8,22 @@ interface Props {
   onApply: (grantId: string) => void;
 }
 
+function possessive(name: string) {
+  return name.endsWith('s') ? `${name}'` : `${name}'s`;
+}
+
 export function GrantDetails({ grantId, onBack, onApply }: Props) {
   const grant = grants.find(g => g.id === grantId) ?? grants[0];
+  const [openedExternalSite, setOpenedExternalSite] = useState(false);
+
+  function handleBeginApplication() {
+    if (grant.applyUrl) {
+      window.open(grant.applyUrl, '_blank', 'noopener,noreferrer');
+      setOpenedExternalSite(true);
+    } else {
+      onApply(grant.id);
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -35,13 +50,15 @@ export function GrantDetails({ grantId, onBack, onApply }: Props) {
               {grant.title}
             </h1>
           </div>
-          <div
-            className="flex flex-col items-center justify-center rounded-full flex-shrink-0"
-            style={{ width: 54, height: 54, background: '#134F34' }}
-          >
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px', lineHeight: 1 }}>{grant.match}%</span>
-            <span style={{ color: '#A7D9BC', fontSize: '9px', lineHeight: 1.2 }}>Match</span>
-          </div>
+          {grant.match != null && (
+            <div
+              className="flex flex-col items-center justify-center rounded-full flex-shrink-0"
+              style={{ width: 54, height: 54, background: '#134F34' }}
+            >
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px', lineHeight: 1 }}>{grant.match}%</span>
+              <span style={{ color: '#A7D9BC', fontSize: '9px', lineHeight: 1.2 }}>Match</span>
+            </div>
+          )}
         </div>
 
         {/* Stats row */}
@@ -51,7 +68,9 @@ export function GrantDetails({ grantId, onBack, onApply }: Props) {
         >
           {[
             { label: 'FUNDING', value: grant.amount, Icon: DollarSign },
-            { label: 'APPLICANTS', value: `${grant.applicants} Teachers`, Icon: Users },
+            ...(grant.applicants != null
+              ? [{ label: 'APPLICANTS', value: `${grant.applicants} Teachers`, Icon: Users }]
+              : []),
             { label: 'DEADLINE', value: grant.deadline, Icon: Clock },
           ].map(({ label, value, Icon }, i) => (
             <div
@@ -122,15 +141,38 @@ export function GrantDetails({ grantId, onBack, onApply }: Props) {
         style={{ borderTop: '1px solid #F0F0F0' }}
       >
         <button
-          onClick={() => onApply(grant.id)}
+          onClick={handleBeginApplication}
           className="w-full py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
           style={{ background: '#1B7A50', color: '#fff', fontWeight: 700, fontSize: '16px' }}
         >
-          Begin Application →
+          {grant.applyUrl ? (
+            <>Apply on {possessive(grant.funder)} Website <ExternalLink size={16} /></>
+          ) : (
+            'Begin Application →'
+          )}
         </button>
-        <p className="text-center mt-2" style={{ fontSize: '12px', color: '#9CA3AF' }}>
-          Average completion time: {grant.avgCompletionMins} minutes
-        </p>
+
+        {grant.applyUrl && openedExternalSite && (
+          <button
+            onClick={() => onApply(grant.id)}
+            className="w-full py-3 mt-2 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            style={{ background: '#EBF6F0', color: '#1B7A50', fontWeight: 700, fontSize: '14px' }}
+          >
+            I've Submitted My Application — Track It →
+          </button>
+        )}
+
+        {grant.applyUrl && !openedExternalSite && (
+          <p className="text-center mt-2" style={{ fontSize: '12px', color: '#9CA3AF' }}>
+            Opens {possessive(grant.funder)} official application page in a new tab.
+          </p>
+        )}
+
+        {grant.avgCompletionMins != null && (
+          <p className="text-center mt-2" style={{ fontSize: '12px', color: '#9CA3AF' }}>
+            Average completion time: {grant.avgCompletionMins} minutes
+          </p>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "louder-for-learning-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "serve", "-s", "louder_for_learning/build/web", "-l", "5050"],
+      "port": 5050
+    }
+  ]
+}

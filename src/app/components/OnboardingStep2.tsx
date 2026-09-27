@@ -1,17 +1,5 @@
-import { Calculator, FlaskConical, BookOpen, Palette, Landmark, Zap, Music, Monitor, Globe2, Languages, ChevronLeft, Check, Target } from 'lucide-react';
-
-const subjects = [
-  { id: 'math', label: 'Math', Icon: Calculator },
-  { id: 'science', label: 'Science', Icon: FlaskConical },
-  { id: 'english', label: 'English', Icon: BookOpen },
-  { id: 'arts', label: 'Arts', Icon: Palette },
-  { id: 'history', label: 'History', Icon: Landmark },
-  { id: 'physed', label: 'Physical Ed', Icon: Zap },
-  { id: 'music', label: 'Music', Icon: Music },
-  { id: 'technology', label: 'Technology', Icon: Monitor },
-  { id: 'social', label: 'Social Studies', Icon: Globe2 },
-  { id: 'foreign', label: 'Foreign Language', Icon: Languages },
-];
+import { ChevronLeft, Check, Target } from 'lucide-react';
+import { SUBJECT_OPTIONS } from './profileOptions';
 
 interface Props {
   selected: string[];
@@ -52,7 +40,7 @@ export function OnboardingStep2({ selected, onToggle, onFinish, onBack }: Props)
       </p>
 
       <div className="flex flex-wrap gap-2.5">
-        {subjects.map(({ id, label, Icon }) => {
+        {SUBJECT_OPTIONS.map(({ id, label, Icon }) => {
           const active = selected.includes(id);
           return (
             <button

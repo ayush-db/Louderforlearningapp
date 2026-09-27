@@ -8,26 +8,17 @@ const STEPS = [
   { id: 4, label: 'Funded' },
 ];
 
-const MILESTONES = [
-  {
-    label: 'School Eligibility Checked',
-    date: 'Oct 15, 2024',
-    detail: 'Passed Title 1 review',
-    done: true,
-  },
-  {
-    label: 'Principal Approval Form Verified',
-    date: 'Oct 14, 2024',
-    detail: 'Verified digitally',
-    done: true,
-  },
-  {
-    label: 'Application Submitted Successfully',
-    date: 'Oct 12, 2024',
-    detail: 'Submitted by Sarah Davis',
-    done: true,
-  },
-];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatDate(d: Date) {
+  return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function offsetDays(n: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d;
+}
 
 interface Props {
   activeTab: Tab;
@@ -36,6 +27,28 @@ interface Props {
 
 export function ApplicationStatus({ activeTab, onTabChange }: Props) {
   const currentStep = 2;
+
+  const milestones = [
+    {
+      label: 'School Eligibility Checked',
+      date: formatDate(offsetDays(-12)),
+      detail: 'Passed Title 1 review',
+      done: true,
+    },
+    {
+      label: 'Principal Approval Form Verified',
+      date: formatDate(offsetDays(-13)),
+      detail: 'Verified digitally',
+      done: true,
+    },
+    {
+      label: 'Application Submitted Successfully',
+      date: formatDate(offsetDays(-14)),
+      detail: 'Submitted by Sarah Davis',
+      done: true,
+    },
+  ];
+  const estimatedCompletion = formatDate(offsetDays(3));
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -129,7 +142,7 @@ export function ApplicationStatus({ activeTab, onTabChange }: Props) {
             </div>
             <div className="flex items-center gap-2 pt-3" style={{ borderTop: '1px solid #C8E6D4' }}>
               <Clock size={13} color="#4D9E72" />
-              <p style={{ fontSize: '12px', color: '#4D9E72' }}>Estimated completion date: Oct 28, 2024</p>
+              <p style={{ fontSize: '12px', color: '#4D9E72' }}>Estimated completion date: {estimatedCompletion}</p>
             </div>
           </div>
 
@@ -139,11 +152,11 @@ export function ApplicationStatus({ activeTab, onTabChange }: Props) {
               MILESTONES LOG
             </p>
             <div className="flex flex-col gap-4">
-              {MILESTONES.map((m, i) => (
+              {milestones.map((m, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="flex flex-col items-center">
                     <div className="w-2.5 h-2.5 rounded-full mt-1.5" style={{ background: '#1B7A50', flexShrink: 0 }} />
-                    {i < MILESTONES.length - 1 && (
+                    {i < milestones.length - 1 && (
                       <div className="w-0.5 flex-1 mt-1" style={{ background: '#C8E6D4', minHeight: '24px' }} />
                     )}
                   </div>

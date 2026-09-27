@@ -1,29 +1,19 @@
 import { LogOut, Bell, Shield, HelpCircle, ChevronRight, Mail, School, BookOpen, Edit3 } from 'lucide-react';
 import { BottomNav, Tab } from './BottomNav';
+import { SCHOOL_LEVEL_LABELS, SUBJECT_LABELS } from './profileOptions';
 
 interface Props {
   name: string;
   email: string;
+  school: string;
   schoolLevel: string;
   subjects: string[];
+  titleI: boolean;
+  onEditProfile: () => void;
   onLogout: () => void;
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
 }
-
-const levelLabels: Record<string, string> = {
-  elementary: 'Elementary (K–5)',
-  middle: 'Middle School (6–8)',
-  high: 'High School (9–12)',
-  special: 'Special Education',
-  cte: 'Career & Technical',
-};
-
-const subjectLabels: Record<string, string> = {
-  math: 'Math', science: 'Science', english: 'English', arts: 'Arts',
-  history: 'History', physed: 'Physical Ed', music: 'Music',
-  technology: 'Technology', social: 'Social Studies', foreign: 'Foreign Language',
-};
 
 function Row({ icon: Icon, label, value, danger }: { icon: React.ElementType; label: string; value?: string; danger?: boolean }) {
   return (
@@ -46,9 +36,9 @@ function Row({ icon: Icon, label, value, danger }: { icon: React.ElementType; la
   );
 }
 
-export function MyAccount({ name, email, schoolLevel, subjects, onLogout, activeTab, onTabChange }: Props) {
+export function MyAccount({ name, email, school, schoolLevel, subjects, titleI, onEditProfile, onLogout, activeTab, onTabChange }: Props) {
   const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-  const resolvedSubjects = subjects.map(s => subjectLabels[s] ?? s);
+  const resolvedSubjects = subjects.map(s => SUBJECT_LABELS[s] ?? s);
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -68,7 +58,8 @@ export function MyAccount({ name, email, schoolLevel, subjects, onLogout, active
           <p style={{ fontSize: '20px', fontWeight: 700, color: '#fff' }}>{name}</p>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', marginTop: '3px' }}>{email}</p>
           <button
-            className="mt-4 flex items-center gap-1.5 px-4 py-1.5 rounded-full"
+            onClick={onEditProfile}
+            className="mt-4 flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all active:scale-[0.97]"
             style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
           >
             <Edit3 size={12} color="rgba(255,255,255,0.85)" />
@@ -87,9 +78,22 @@ export function MyAccount({ name, email, schoolLevel, subjects, onLogout, active
                 <School size={17} color="#1B7A50" />
               </div>
               <div>
-                <p style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 500 }}>School Level</p>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginTop: '1px' }}>
-                  {schoolLevel ? levelLabels[schoolLevel] ?? schoolLevel : 'Not set'}
+                <p style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 500 }}>School</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+                    {school || 'Not set'}
+                  </p>
+                  {titleI && (
+                    <span
+                      className="px-2 py-0.5 rounded-full"
+                      style={{ fontSize: '10px', fontWeight: 600, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
+                    >
+                      Title I / Underfunded
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: '13px', color: '#6B7280', marginTop: '2px' }}>
+                  {schoolLevel ? SCHOOL_LEVEL_LABELS[schoolLevel] ?? schoolLevel : 'Level not set'}
                 </p>
               </div>
             </div>

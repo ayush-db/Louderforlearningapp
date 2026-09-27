@@ -2,6 +2,7 @@ import { Bell, ChevronRight, X, Star, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { grants, Grant } from './grantData';
 import { BottomNav, Tab } from './BottomNav';
+import { SUBJECT_LABELS } from './profileOptions';
 
 const SUBJECT_FILTERS = ['STEM', 'Reading', 'Arts', 'Special Education', 'History'];
 const LEVEL_FILTERS = ['Elementary', 'Middle School', 'High School', 'All Levels'];
@@ -9,8 +10,10 @@ const FUNDING_FILTERS = ['$0–$1k', '$1k–$3k', '$3k–$5k', '$5k+'];
 
 interface Props {
   teacherName: string;
+  school: string;
   schoolLevel: string;
   subjects: string[];
+  titleI: boolean;
   onGrantSelect: (id: string) => void;
   onTeacherSpotlight: () => void;
   onAccountPress: () => void;
@@ -18,7 +21,8 @@ interface Props {
   onTabChange: (tab: Tab) => void;
 }
 
-function MatchBadge({ pct }: { pct: number }) {
+function MatchBadge({ pct }: { pct?: number }) {
+  if (pct == null) return null;
   return (
     <div
       className="flex flex-col items-center justify-center rounded-full flex-shrink-0"
@@ -85,7 +89,7 @@ function GrantCard({ grant, onPress }: { grant: Grant; onPress: () => void }) {
 
 type FilterKey = 'subject' | 'level' | 'funding';
 
-export function Dashboard({ teacherName, onGrantSelect, onTeacherSpotlight, onAccountPress, activeTab, onTabChange }: Props) {
+export function Dashboard({ teacherName, school, schoolLevel, subjects, titleI, onGrantSelect, onTeacherSpotlight, onAccountPress, activeTab, onTabChange }: Props) {
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string>>({
     subject: '',
     level: '',
@@ -94,6 +98,7 @@ export function Dashboard({ teacherName, onGrantSelect, onTeacherSpotlight, onAc
   const [filterOpen, setFilterOpen] = useState<FilterKey | null>(null);
 
   const firstName = teacherName.split(' ')[0] || 'Teacher';
+  const resolvedSubjects = subjects.map(s => SUBJECT_LABELS[s] ?? s);
 
   const visibleGrants = grants.filter(g => {
     const sf = activeFilters.subject;
@@ -103,7 +108,13 @@ export function Dashboard({ teacherName, onGrantSelect, onTeacherSpotlight, onAc
     return true;
   });
 
+  const matchingGrants = grants.filter(g =>
+    g.tags.some(t => t === 'All Subjects' || t === 'Any Subject')
+    || resolvedSubjects.some(s => g.tags.some(t => t.toLowerCase().includes(s.toLowerCase())))
+  );
+
   const clearFilter = (key: FilterKey) => setActiveFilters(f => ({ ...f, [key]: '' }));
+  const clearAllFilters = () => setActiveFilters({ subject: '', level: '', funding: '' });
 
   const filterLabels: { key: FilterKey; label: string; options: string[] }[] = [
     { key: 'subject', label: 'Subject', options: SUBJECT_FILTERS },
@@ -162,30 +173,36 @@ export function Dashboard({ teacherName, onGrantSelect, onTeacherSpotlight, onAc
               Welcome back, {firstName}!
             </h2>
             <div className="flex items-center gap-2 mt-0.5">
-              <span style={{ fontSize: '13px', color: '#6B7280' }}>Oakridge Elementary School</span>
-              <span
-                className="px-2 py-0.5 rounded-full"
-                style={{ fontSize: '10px', fontWeight: 600, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
-              >
-                Underfunded
-              </span>
+              <span style={{ fontSize: '13px', color: '#6B7280' }}>{school || 'School not set'}</span>
+              {titleI && (
+                <span
+                  className="px-2 py-0.5 rounded-full"
+                  style={{ fontSize: '10px', fontWeight: 600, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
+                >
+                  Underfunded
+                </span>
+              )}
             </div>
           </div>
 
           {/* Custom grants banner */}
-          <div
-            className="flex items-center gap-3 p-3.5 rounded-xl"
-            style={{ background: '#EBF6F0', border: '1px solid #C8E6D4' }}
-          >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#1B7A50' }}>
-              <Star size={15} color="#fff" fill="#fff" />
+          {resolvedSubjects.length > 0 && (
+            <div
+              className="flex items-center gap-3 p-3.5 rounded-xl"
+              style={{ background: '#EBF6F0', border: '1px solid #C8E6D4' }}
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#1B7A50' }}>
+                <Star size={15} color="#fff" fill="#fff" />
+              </div>
+              <div className="flex-1">
+                <p style={{ fontSize: '13px', fontWeight: 600, color: '#134F34' }}>
+                  {matchingGrants.length} Grant{matchingGrants.length === 1 ? '' : 's'} Matched to Your Profile
+                </p>
+                <p style={{ fontSize: '11px', color: '#4D9E72' }}>Based on your {resolvedSubjects.join(', ')} preferences</p>
+              </div>
+              <ChevronRight size={16} color="#4D9E72" />
             </div>
-            <div className="flex-1">
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#134F34' }}>3 New Custom Grants Found</p>
-              <p style={{ fontSize: '11px', color: '#4D9E72' }}>Based on your STEM & Special Ed preferences</p>
-            </div>
-            <ChevronRight size={16} color="#4D9E72" />
-          </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -254,7 +271,7 @@ export function Dashboard({ teacherName, onGrantSelect, onTeacherSpotlight, onAc
         <div className="px-5 pt-3">
           <div className="flex items-center justify-between mb-3">
             <p style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>RECOMMENDED FOR YOU</p>
-            <button style={{ fontSize: '12px', color: '#1B7A50', fontWeight: 600 }}>See All</button>
+            <button onClick={clearAllFilters} style={{ fontSize: '12px', color: '#1B7A50', fontWeight: 600 }}>See All</button>
           </div>
 
           <div className="flex flex-col gap-3 mb-6">

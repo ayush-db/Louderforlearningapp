@@ -8,7 +8,9 @@ import { ApplicationForm } from './components/ApplicationForm';
 import { ApplicationStatus } from './components/ApplicationStatus';
 import { TeacherSpotlight } from './components/TeacherSpotlight';
 import { MyAccount } from './components/MyAccount';
+import { EditProfile, ProfileData } from './components/EditProfile';
 import { Tab } from './components/BottomNav';
+import { loadProfile, saveProfile, deriveNameFromEmail } from './components/profileStorage';
 
 type Screen =
   | 'login'
@@ -19,40 +21,69 @@ type Screen =
   | 'apply'
   | 'status'
   | 'teacher-spotlight'
-  | 'account';
+  | 'account'
+  | 'edit-profile';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('login');
   const [teacherName, setTeacherName] = useState('');
   const [teacherEmail, setTeacherEmail] = useState('');
+  const [school, setSchool] = useState('');
   const [schoolLevel, setSchoolLevel] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [titleI, setTitleI] = useState(false);
   const [selectedGrantId, setSelectedGrantId] = useState('1');
   const [activeTab, setActiveTab] = useState<Tab>('grants');
-  const [isFirstLogin, setIsFirstLogin] = useState(true);
 
   function handleLogin(name: string, email: string) {
-    setTeacherName(name);
     setTeacherEmail(email);
-    if (isFirstLogin) {
-      setScreen('onboarding1');
-    } else {
+    const stored = loadProfile(email);
+    if (stored) {
+      setTeacherName(stored.name);
+      setSchool(stored.school);
+      setSchoolLevel(stored.schoolLevel);
+      setSubjects(stored.subjects);
+      setTitleI(stored.titleI);
       setActiveTab('grants');
       setScreen('dashboard');
+    } else {
+      setTeacherName(name || deriveNameFromEmail(email));
+      setSchool('');
+      setSchoolLevel('');
+      setSubjects([]);
+      setTitleI(false);
+      setScreen('onboarding1');
     }
   }
 
   function handleLogout() {
     setTeacherName('');
     setTeacherEmail('');
+    setSchool('');
     setSchoolLevel('');
     setSubjects([]);
-    setIsFirstLogin(true);
+    setTitleI(false);
     setScreen('login');
   }
 
   function toggleSubject(s: string) {
     setSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  }
+
+  function finishOnboarding() {
+    saveProfile(teacherEmail, { name: teacherName, school, schoolLevel, subjects, titleI });
+    setActiveTab('grants');
+    setScreen('dashboard');
+  }
+
+  function saveProfileEdits(data: ProfileData) {
+    setTeacherName(data.name);
+    setSchool(data.school);
+    setSchoolLevel(data.schoolLevel);
+    setSubjects(data.subjects);
+    setTitleI(data.titleI);
+    saveProfile(teacherEmail, data);
+    setScreen('account');
   }
 
   function handleTabChange(tab: Tab) {
@@ -80,6 +111,10 @@ export default function App() {
           <OnboardingStep1
             selected={schoolLevel}
             onSelect={setSchoolLevel}
+            school={school}
+            onSchoolChange={setSchool}
+            titleI={titleI}
+            onTitleIChange={setTitleI}
             onNext={() => setScreen('onboarding2')}
           />
         )}
@@ -88,7 +123,7 @@ export default function App() {
           <OnboardingStep2
             selected={subjects}
             onToggle={toggleSubject}
-            onFinish={() => { setIsFirstLogin(false); setActiveTab('grants'); setScreen('dashboard'); }}
+            onFinish={finishOnboarding}
             onBack={() => setScreen('onboarding1')}
           />
         )}
@@ -96,8 +131,10 @@ export default function App() {
         {screen === 'dashboard' && (
           <Dashboard
             teacherName={teacherName}
+            school={school}
             schoolLevel={schoolLevel}
             subjects={subjects}
+            titleI={titleI}
             onGrantSelect={id => { setSelectedGrantId(id); setScreen('grant-detail'); }}
             onTeacherSpotlight={() => setScreen('teacher-spotlight')}
             onAccountPress={() => { setActiveTab('account'); setScreen('account'); }}
@@ -110,7 +147,7 @@ export default function App() {
           <GrantDetails
             grantId={selectedGrantId}
             onBack={() => setScreen('dashboard')}
-            onApply={id => { setSelectedGrantId(id); setActiveTab('apply'); setScreen('apply'); }}
+            onApply={id => { setSelectedGrantId(id); setActiveTab('status'); setScreen('status'); }}
           />
         )}
 
@@ -137,11 +174,22 @@ export default function App() {
           <MyAccount
             name={teacherName}
             email={teacherEmail}
+            school={school}
             schoolLevel={schoolLevel}
             subjects={subjects}
+            titleI={titleI}
+            onEditProfile={() => setScreen('edit-profile')}
             onLogout={handleLogout}
             activeTab={activeTab}
             onTabChange={handleTabChange}
+          />
+        )}
+
+        {screen === 'edit-profile' && (
+          <EditProfile
+            initial={{ name: teacherName, school, schoolLevel, subjects, titleI }}
+            onSave={saveProfileEdits}
+            onCancel={() => setScreen('account')}
           />
         )}
       </div>
