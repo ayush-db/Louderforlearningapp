@@ -13,9 +13,6 @@ workflows:
       app_store_connect: codemagic_api_key
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.louderforlearning.app
       vars:
         BUNDLE_ID: "com.louderforlearning.app"
         XCODE_WORKSPACE: "ios/Runner.xcworkspace"
@@ -32,6 +29,22 @@ workflows:
           include: true
 
     scripts:
+      - name: Initialize keychain
+        script: keychain initialize
+
+      # First run: nothing exists yet for this bundle ID in App Store
+      # Connect, so --create has it generate the distribution certificate
+      # and App Store provisioning profile via the API key. Later runs
+      # just reuse what's already there.
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
 
