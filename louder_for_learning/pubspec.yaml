@@ -1,0 +1,33 @@
+name: louder_for_learning
+description: Grant discovery app for teachers at underfunded schools.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.4.1
+  url_launcher: ^6.3.1
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7
+  cloud_firestore: ^6.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/logo.png
+
+flutter_launcher_icons:
+  image_path: "assets/images/logo.png"
+  ios: true
+  remove_alpha_ios: true
