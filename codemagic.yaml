@@ -1,4 +1,50 @@
 workflows:
+  # Needs no Apple Developer account: compiles the iOS app without code
+  # signing, so it proves the project builds on a Mac before you pay for
+  # the $99/yr membership. Runs on every push to main.
+  ios-build-check:
+    name: iOS build check (unsigned)
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    working_directory: louder_for_learning
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Flutter analyze
+        script: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Build iOS (no codesign)
+        script: flutter build ios --release --no-codesign
+
+    artifacts:
+      - build/ios/iphoneos/*.app
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - ayushdebbhattacharyya2@gmail.com
+        notify:
+          success: false
+          failure: true
+
+  # Requires an Apple Developer Program membership. Start it manually from
+  # the Codemagic dashboard; once it succeeds, you can add a `triggering`
+  # block like the one above to ship every push to main.
   ios-testflight:
     name: iOS TestFlight
     max_build_duration: 60
@@ -15,18 +61,9 @@ workflows:
     environment:
       vars:
         BUNDLE_ID: "com.louderforlearning.app"
-        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
       flutter: stable
       xcode: latest
       cocoapods: default
-
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
 
     scripts:
       - name: Initialize keychain
@@ -49,15 +86,15 @@ workflows:
         script: xcode-project use-profiles
 
       - name: Get Flutter packages
-        script: flutter packages pub get
+        script: flutter pub get
 
-      - name: Install CocoaPods dependencies
-        script: |
-          find . -name "Podfile" -maxdepth 2 -execdir pod install \;
-
+      # App Store Connect rejects an upload whose build number was already
+      # used, so pubspec's fixed "+1" would only work once. Codemagic's
+      # $BUILD_NUMBER increments per workflow run.
       - name: Flutter build ipa
         script: |
           flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
